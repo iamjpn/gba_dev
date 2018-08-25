@@ -8,17 +8,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 #include "title.h"
 #include "ball.h"
 #include "paddle.h"
 #include "score.h"
-#include "background.h"
 #include "starbackground.h"
-
-//#include "test.h"
-#include "padd.h"
 #include "sprite.h"
-#include <stdbool.h>
 
 #define BALL_WIDTH 8
 #define BALL_HEIGHT 8
@@ -32,11 +28,21 @@
 #define MAX_SPRITES 128
 #define SCORE_WIDTH 8
 
+/* Initial X position of the player's score */
 #define P_SCORE_X (SCREEN_WIDTH / 4) - (SCORE_WIDTH * 3 / 2)
+
+/* Initial X position of the enemy's score */
 #define E_SCORE_X (SCREEN_WIDTH / 4 * 3) - (SCORE_WIDTH * 3 / 2)
+
+/* Amount of points needed to win a round */
 #define MAX_SCORE 3
 
-static int timer;
+/* For fixed point numbers */
+#define FIXED_SIZE 8
+
+
+/* Score maintains the amount of points a paddle has won
+   and represents as a sprite */
 typedef struct Score {
     int x;
     int y;
@@ -44,16 +50,21 @@ typedef struct Score {
     OBJATTR *sprite[MAX_SCORE];
 } Score;
 
+/* Paddle maintains the state and representation of a 
+   paddle in the game */
 typedef struct Paddle {
     int x;
     int y;
     int width;
     int height;
     OBJATTR *sprite;
-	Score *score;
+
+    /* score used to maintain own points */
+	Score *score;   
 	void (*update_fn)(struct Paddle *, u16 keys);
 } Paddle;
 
+/* Ball represents the ball in the game */
 typedef struct Ball {
     int x;
     int x_speed;
@@ -66,7 +77,7 @@ typedef struct Ball {
 	int timer;
 } Ball;
 
-
+/* GameState maintains a global state for the game */
 typedef enum {MOVING, BETWEEN_ROUNDS, WAITING, OVER} State;
 typedef struct GameState {
 	State state;
@@ -75,6 +86,7 @@ typedef struct GameState {
 	int ePoints;
 } GameState;
 
+/* Coord holds a point (x, y) */
 typedef struct Coord {
     u32 x;
     u32 y;
@@ -87,51 +99,12 @@ Paddle enemy;
 Ball ball;
 Score eScore;
 Score pScore;
+static int timer;
 
-/* Used so that only need to access the VRAM once */
+/* Used a double buffer so that only need to access the VRAM once */
 OBJATTR obj_buffer[MAX_SPRITES];
 
-void hide_sprite(OBJATTR *sprite) {
-	sprite->attr0 |= (1<<9);
-}
 
-void show_sprite(OBJATTR *sprite) {
-	sprite->attr0 &= ~(1<<9);
-}
-
-void score_reset(Score *score) {
-	int i;
-
-	for (i = 0; i < score->points; i++) {
-		hide_sprite(score->sprite[i]);
-	}
-	score->points = 0;
-}
-
-void score_inc(Score *score) {
-	score->points++;
-}
-
-void score_update(Score *score) {
-	int i;
-	for (i = 0; i < score->points; i++) {
-		show_sprite(score->sprite[i]);
-	}
-}
-
-void score_init(Score *score, int x, int y, OBJATTR *sprite_mem) {
-	int i;
-	score->x = x;
-	score->y = y;
-	score->points = 0;
-	for(i = 0; i < MAX_SCORE; i++) {
-		score->sprite[i] = sprite_mem + i;
-		obj_set_attr(score->sprite[i], OBJ_Y(y) | ATTR0_COLOR_16 | ATTR0_SQUARE, 
-				OBJ_X(x + i * 8) | ATTR1_SIZE_8,
-				ATTR2_PALBANK(0) | 0x09);
-		hide_sprite(score->sprite[i]);
-	}
-}
 
 /* Function Declarations */
 void hardware_init(void);
@@ -149,23 +122,90 @@ int random_sign();
 Coord ball_get_pos(Ball *ball);
 Coord paddle_get_pos(Paddle *paddle);
 void round_over(Paddle *paddle);
-#define FIXED_SIZE 8
 
-void background_init() {
+
+/* hide_sprite turns off the display attribute for a sprite object */
+void 
+hide_sprite(OBJATTR *sprite) 
+{
+	sprite->attr0 |= (1<<9);
+}
+
+/* show_sprite turns on the display attribute for a sprite object */
+void 
+show_sprite(OBJATTR *sprite) 
+{
+	sprite->attr0 &= ~(1<<9);
+}
+
+/* score_reset zeroes score's count and hides all of the counting block */
+void 
+score_reset(Score *score) 
+{
+	int i;
+
+	for (i = 0; i < score->points; i++) {
+		hide_sprite(score->sprite[i]);
+	}
+	score->points = 0;
+}
+
+/* score_inc adds one to score */
+void 
+score_inc(Score *score) 
+{
+	score->points++;
+}
+
+/* score_update shows score's count on the screen */
+void 
+score_update(Score *score) 
+{
+	int i;
+	for (i = 0; i < score->points; i++) {
+		show_sprite(score->sprite[i]);
+	}
+}
+
+/* score_init sets up all of sprite objects used to show score on the screen */
+void 
+score_init(Score *score, int x, int y, OBJATTR *sprite_mem) 
+{
+	int i;
+	score->x = x;
+	score->y = y;
+	score->points = 0;
+	for(i = 0; i < MAX_SCORE; i++) {
+		score->sprite[i] = sprite_mem + i;
+		obj_set_attr(score->sprite[i], OBJ_Y(y) | ATTR0_COLOR_16 | ATTR0_SQUARE, 
+				OBJ_X(x + i * 8) | ATTR1_SIZE_8,
+				ATTR2_PALBANK(0) | 0x09);
+		hide_sprite(score->sprite[i]);
+	}
+}
+
+/* background_init loads the tiles and pallete into background memory */
+void 
+background_init() 
+{
 	memcpy(BG_COLORS, starbackgroundPal, starbackgroundPalLen);
 	memcpy(&tile_mem[0][0], starbackgroundTiles, starbackgroundTilesLen);
-	//memcpy(&tile_mem[0][0],  backgroundTiles, starTilesLen);
 	memcpy(&se_mem[30][0], starbackgroundMap, starbackgroundMapLen);
-	//REG_MOSAIC = ;
 	REG_BG0CNT = CHAR_BASE(0) | SCREEN_BASE(30) | BG_256_COLOR | BG_SIZE_0 | BG_MOSAIC;
 }
 
-void background_update() {
+/* background_update moves the background */
+void 
+background_update() 
+{
 	static int ofs;
 	REG_BG0HOFS = ofs++;
 }
 
-int get_sign(int x) {
+/* get_sign returns the sign of x */
+int 
+get_sign(int x) 
+{
     if (x < 0) {
         return -1;
     } else {
@@ -173,23 +213,29 @@ int get_sign(int x) {
     }
 }
 
-int from_fix(int x) {
+/* from_fix converts fix->normal */
+int 
+from_fix(int x) 
+{
 	return x >> FIXED_SIZE;
 }
 
-int to_fix(int x) {
+/* from_fix converts normal->fix */
+int 
+to_fix(int x) 
+{
 	return x << FIXED_SIZE;
 }
 
-/* Function Definitions */
-void hardware_init() {
+/* hardware_init sets up all of the video memory */
+void 
+hardware_init() 
+{
     /* Prepare the screen */
 	background_init();
     REG_DISPCNT = MODE_0 | OBJ_1D_MAP | OBJ_ENABLE | BG0_ENABLE;
 
     /* Load the sprites into memory */
-    //memcpy(&tile8_mem[4][0], paddaTiles, paddaTilesLen);
-    //memcpy(&tile8_mem[4][1], paddTiles, paddTilesLen);
     memcpy(&tile_mem[4][0], paddleBitmap, paddleBitmapLen);
     memcpy(&tile_mem[4][4], paddleBitmap, paddleBitmapLen);
     memcpy(&tile_mem[4][8], ballBitmap, ballBitmapLen);
@@ -200,24 +246,30 @@ void hardware_init() {
 
     /* Clear the screen to prevent artifacts */
     oam_init(obj_buffer, MAX_SPRITES);
-
 }
 
-void game_state_init(GameState *gameState) {
-    //gameState->score = 0;
+/* game_state_init sets the game back to waiting to begin */
+void 
+game_state_init(GameState *gameState) 
+{
     gameState->pPoints = 0;
     gameState->ePoints = 0;
 	gameState->state = WAITING;
-    //gameState->moving = false;
-
 }
 
-int paddle_get_score(Paddle *p) {
+/* paddle_get_score returns the points a paddle has scored */
+int 
+paddle_get_score(Paddle *p) 
+{
 	return p->score->points;
 }
 
-void paddle_init(Paddle *paddle, Score *score, u32 index, u32 x, u32 y, void (*update_fn)) {
-    /* The paddles memory is the second in the buffer */
+/* paddle_init sets up paddle. 
+   update_fn will be called every frame to update the paddle
+   index is the offset of the paddle in object memory */
+void 
+paddle_init(Paddle *paddle, Score *score, u32 index, u32 x, u32 y, void (*update_fn)) 
+{
     paddle->sprite = &obj_buffer[index];
     paddle->x = x;
     paddle->y = y;
@@ -226,14 +278,16 @@ void paddle_init(Paddle *paddle, Score *score, u32 index, u32 x, u32 y, void (*u
     paddle->height = PADDLE_HEIGHT;
 	paddle->update_fn = update_fn;
 
-
     /* 02 cause double size pallete */
     obj_set_attr(paddle->sprite, OBJ_Y(y) | ATTR0_COLOR_16 | ATTR0_TALL, 
             OBJ_X(x) | ATTR1_SIZE_16,
             ATTR2_PALBANK(0) | index);
 }
 
-void paddle_update(Paddle *paddle, u16 keys) {
+/* paddle_update moves a paddle in response to pressed buttons */
+void 
+paddle_update(Paddle *paddle, u16 keys) 
+{
     if (keys & KEY_DOWN) {
         paddle->y += 2;
         if (paddle->y + PADDLE_HEIGHT > SCREEN_HEIGHT) {
@@ -257,7 +311,6 @@ void enemy_update(Paddle *paddle, u16 keys) {
      * end of the screen and move to there 
      */
     if (gameState.state == MOVING) {
-    //if (gameState.moving) {
 		Coord ballCoord = ball_get_pos(&ball);
         if(from_fix(ball.x_speed) > 0 && ballCoord.x > 60) {
             int xSpeed = from_fix(ball.x_speed);
@@ -363,16 +416,11 @@ void ball_move(Ball *ball) {
     }
 
     if(from_fix(ball->x) < PADDLE_WIDTH) {
-		//game_over();
-        //gameState.moving = false;
-        //ball_init(ball);
 		 round_over(&enemy);
     }
 
     if(from_fix(ball->x) + BALL_WIDTH > SCREEN_WIDTH -  PADDLE_WIDTH) {
         /* lose state */
-        //gameState.moving = false;
-        //ball_init(ball);
 		round_over(&paddle);
     }
 
@@ -399,8 +447,6 @@ Coord paddle_get_pos(Paddle *paddle) {
 
 Coord ball_get_pos(Ball *ball) {
     Coord coord;
-    //coord.x = BFN_GET(ball->sprite->attr1, ATTR1_X);
-    //coord.y = BFN_GET(ball->sprite->attr0, ATTR0_Y);
     coord.x = from_fix(ball->x);
     coord.y = from_fix(ball->y);
     return coord;
@@ -482,14 +528,10 @@ void game_reset() {
 void game_state_update(GameState *gameState, u16 keys) {
 	static int frames;
     if (keys & KEY_A) {
-        //gameState->moving = true;
         gameState->state = MOVING;
     } 
 
 	if (gameState->state == BETWEEN_ROUNDS) {
-		//frames += 1;
-		//if (frames % 21 == 0) {
-			//frames = 0;
 		timer--;
 		if (timer == 0) {
 			gameState->state = WAITING;
@@ -507,7 +549,6 @@ void game_state_update(GameState *gameState, u16 keys) {
 }
 
 void ball_update(Ball *ball, u16 keys) {
-    //if (gameState.moving) {
     if (gameState.state == MOVING) {
         ball_move(ball);
     } 
