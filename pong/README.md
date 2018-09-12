@@ -3,7 +3,7 @@
 This is a game of pong I wrote for the GBA. 
 You should be able to play it using any emulator. 
 
-![video of game]("https://github.com/iamjpn/gba_dev/blob/master/pong/pong.gif")
+![video of game](https://github.com/iamjpn/gba_dev/blob/master/pong/pong.gif Pong)
 
 
 # Building 
