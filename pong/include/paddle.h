@@ -1,28 +1,41 @@
+#ifndef PADDLE_H
+#define PADDLE_H
 
-//{{BLOCK(paddle)
+#include <gba_sprites.h>
+#include <gba_input.h>
+#include <gba_video.h>
+#include "score.h"
+#include "paddle.h"
+#include "coord.h"
+#include "sprite.h"
 
-//======================================================================
-//
-//	paddle, 8x32@4, 
-//	+ palette 256 entries, not compressed
-//	+ bitmap not compressed
-//	Total size: 512 + 128 = 640
-//
-//	Time-stamp: 2018-06-25, 00:10:13
-//	Exported by Cearn's GBA Image Transmogrifier, v0.8.3
-//	( http://www.coranac.com/projects/#grit )
-//
-//======================================================================
 
-#ifndef GRIT_PADDLE_H
-#define GRIT_PADDLE_H
 
-#define paddleBitmapLen 128
-extern const unsigned int paddleBitmap[32];
+#define PADDLE_WIDTH 8
+#define PADDLE_HEIGHT 32
 
-#define paddlePalLen 512
-extern const unsigned int paddlePal[128];
+/* Paddle maintains the state and representation of a 
+   paddle in the game */
+typedef struct Paddle {
+    int x;
+    int y;
+    int width;
+    int height;
+    OBJATTR *sprite;
 
-#endif // GRIT_PADDLE_H
+    /* score used to maintain own points */
+	Score *score;   
+	void (*update_fn)(struct Paddle *, u16 keys);
+} Paddle;
 
-//}}BLOCK(paddle)
+
+extern Paddle paddle;
+extern Paddle enemy;
+
+
+void paddle_update(Paddle *paddle, u16 keys);
+void paddle_init(Paddle *paddle, Score *score, u32 index, u32 x, u32 y, void (*update_fn));
+Coord paddle_get_pos(Paddle *paddle);
+int paddle_get_score(Paddle *p);
+
+#endif

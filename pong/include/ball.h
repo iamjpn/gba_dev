@@ -1,28 +1,37 @@
+#ifndef BALL_H
+#define BALL_H
 
-//{{BLOCK(ball)
+#include <gba_sprites.h>
+#include <gba_input.h>
+#include <gba_video.h>
+#include "score.h"
+#include "paddle.h"
+#include "coord.h"
+#include "sprite.h"
 
-//======================================================================
-//
-//	ball, 8x8@4, 
-//	+ palette 256 entries, not compressed
-//	+ bitmap not compressed
-//	Total size: 512 + 32 = 544
-//
-//	Time-stamp: 2018-06-24, 23:14:10
-//	Exported by Cearn's GBA Image Transmogrifier, v0.8.3
-//	( http://www.coranac.com/projects/#grit )
-//
-//======================================================================
+#define BALL_WIDTH 8
+#define BALL_HEIGHT 8
 
-#ifndef GRIT_BALL_H
-#define GRIT_BALL_H
+/* Ball represents the ball in the game */
+typedef struct Ball {
+    int x;
+    int x_speed;
+    int y;
+    int y_speed;
+    int width;
+    int height;
+    OBJATTR *sprite;
+    bool moving;
+	int timer;
+} Ball;
 
-#define ballBitmapLen 32
-extern const unsigned int ballBitmap[8];
 
-#define ballPalLen 512
-extern const unsigned int ballPal[128];
+extern Ball ball;
 
-#endif // GRIT_BALL_H
+void ball_init(Ball *paddle);
+void ball_update(Ball *paddle, u16 keys);
+void ball_move(Ball *ball);
+Coord ball_get_pos(Ball *ball);
+void ball_flash(Ball *ball);
 
-//}}BLOCK(ball)
+#endif 

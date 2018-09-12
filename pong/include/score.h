@@ -1,28 +1,23 @@
+#ifndef SCORE_H
+#define SCORE_H
+#include <gba_sprites.h>
+/* Score maintains the amount of points a paddle has won
+   and represents as a sprite */
 
-//{{BLOCK(score)
+/* Amount of points needed to win a round */
+#define MAX_SCORE 3
+typedef struct Score {
+    int x;
+    int y;
+	int points;
+    OBJATTR *sprite[MAX_SCORE];
+} Score;
 
-//======================================================================
-//
-//	score, 8x8@4, 
-//	+ palette 256 entries, not compressed
-//	+ 1 tiles not compressed
-//	Total size: 512 + 32 = 544
-//
-//	Time-stamp: 2018-07-01, 17:31:53
-//	Exported by Cearn's GBA Image Transmogrifier, v0.8.3
-//	( http://www.coranac.com/projects/#grit )
-//
-//======================================================================
+extern Score eScore;
+extern Score pScore;
 
-#ifndef GRIT_SCORE_H
-#define GRIT_SCORE_H
-
-#define scoreTilesLen 32
-extern const unsigned int scoreTiles[8];
-
-#define scorePalLen 512
-extern const unsigned int scorePal[128];
-
-#endif // GRIT_SCORE_H
-
-//}}BLOCK(score)
+void score_reset(Score *score);
+void score_inc(Score *score);
+void score_update(Score *score);
+void score_init(Score *score, int x, int y, OBJATTR *sprite_mem);
+#endif 
