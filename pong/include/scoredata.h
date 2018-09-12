@@ -3,7 +3,7 @@
 
 //======================================================================
 //
-//	score, 8x8@4, 
+//	score, 8x8@4,
 //	+ palette 256 entries, not compressed
 //	+ 1 tiles not compressed
 //	Total size: 512 + 32 = 544

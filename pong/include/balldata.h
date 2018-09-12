@@ -3,7 +3,7 @@
 
 //======================================================================
 //
-//	ball, 8x8@4, 
+//	ball, 8x8@4,
 //	+ palette 256 entries, not compressed
 //	+ bitmap not compressed
 //	Total size: 512 + 32 = 544

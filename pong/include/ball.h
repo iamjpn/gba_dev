@@ -14,17 +14,16 @@
 
 /* Ball represents the ball in the game */
 typedef struct Ball {
-    int x;
-    int x_speed;
-    int y;
-    int y_speed;
-    int width;
-    int height;
-    OBJATTR *sprite;
-    bool moving;
-	int timer;
+  int x;
+  int x_speed;
+  int y;
+  int y_speed;
+  int width;
+  int height;
+  OBJATTR *sprite;
+  bool moving;
+  int timer;
 } Ball;
-
 
 extern Ball ball;
 
@@ -34,4 +33,4 @@ void ball_move(Ball *ball);
 Coord ball_get_pos(Ball *ball);
 void ball_flash(Ball *ball);
 
-#endif 
+#endif

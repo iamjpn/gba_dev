@@ -7,10 +7,10 @@
 /* Amount of points needed to win a round */
 #define MAX_SCORE 3
 typedef struct Score {
-    int x;
-    int y;
-	int points;
-    OBJATTR *sprite[MAX_SCORE];
+  int x;
+  int y;
+  int points;
+  OBJATTR *sprite[MAX_SCORE];
 } Score;
 
 extern Score eScore;
@@ -20,4 +20,4 @@ void score_reset(Score *score);
 void score_inc(Score *score);
 void score_update(Score *score);
 void score_init(Score *score, int x, int y, OBJATTR *sprite_mem);
-#endif 
+#endif

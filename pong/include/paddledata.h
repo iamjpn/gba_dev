@@ -3,7 +3,7 @@
 
 //======================================================================
 //
-//	paddle, 8x32@4, 
+//	paddle, 8x32@4,
 //	+ palette 256 entries, not compressed
 //	+ bitmap not compressed
 //	Total size: 512 + 128 = 640

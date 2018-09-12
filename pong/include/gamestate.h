@@ -1,15 +1,13 @@
 #ifndef GAMESTATE_H
 #define GAMESTATE_H
 
-
-
 /* GameState maintains a global state for the game */
-typedef enum {MOVING, BETWEEN_ROUNDS, WAITING, OVER} State;
+typedef enum { MOVING, BETWEEN_ROUNDS, WAITING, OVER } State;
 typedef struct GameState {
-	State state;
+  State state;
   bool moving;
-	int pPoints;
-	int ePoints;
+  int pPoints;
+  int ePoints;
 } GameState;
 
 extern GameState gameState;
